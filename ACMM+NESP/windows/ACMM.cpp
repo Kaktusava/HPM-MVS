@@ -843,7 +843,7 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
     std::stringstream result_path;
     result_path << dense_folder << "/ACMM_NESP" << "/2333_" << std::setw(8) << std::setfill('0') << problem.ref_image_id;
     std::string result_folder = result_path.str();
-    mkdir(result_folder.c_str());
+    mkdir(result_folder.c_str(), 755);
     std::string depth_path = result_folder + "/depths.dmb";
     writeDepthDmb ( depth_path, disp0 );
 
