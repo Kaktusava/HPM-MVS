@@ -3,7 +3,7 @@
 
 void GenerateSampleList(const std::string &dense_folder, std::vector<Problem> &problems)
 {
-    std::string cluster_list_path = dense_folder + std::string("/pair.txt");
+    std::string cluster_list_path = dense_folder / path("tis_right") / path("rgb") / path("mvsnet_input") / path("pair.txt");
 
     problems.clear();
 
