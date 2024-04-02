@@ -1,4 +1,4 @@
-f#include "ACMM.h"
+#include "ACMM.h"
 
 #include <cstdarg>
 
@@ -451,11 +451,11 @@ void ACMM::InuputInitialization(const std::string &dense_folder, const std::vect
     cameras.clear();
     const Problem problem = problems[idx];
 
-    std::string image_folder = dense_folder + std::string("/images");
-    std::string cam_folder = dense_folder + std::string("/cams");
+    std::string image_folder = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/undistorted") + std::string("/ambient@best");
+    std::string cam_folder = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/mvsnet_input");
 
     std::stringstream image_path;
-    image_path << image_folder << "/" << std::setw(8) << std::setfill('0') << problem.ref_image_id << ".jpg";
+    image_path << image_folder << "/" << std::setw(4) << std::setfill('0') << problem.ref_image_id << ".png";
     cv::Mat_<uint8_t> image_uint = cv::imread(image_path.str(), cv::IMREAD_GRAYSCALE);
     cv::Mat image_float;
     image_uint.convertTo(image_float, CV_32FC1);
@@ -470,7 +470,7 @@ void ACMM::InuputInitialization(const std::string &dense_folder, const std::vect
     size_t num_src_images = problem.src_image_ids.size();
     for (size_t i = 0; i < num_src_images; ++i) {
         std::stringstream image_path;
-        image_path << image_folder << "/" << std::setw(8) << std::setfill('0') << problem.src_image_ids[i] << ".jpg";
+        image_path << image_folder << "/" << std::setw(4) << std::setfill('0') << problem.src_image_ids[i] << ".png";
         cv::Mat_<uint8_t> image_uint = cv::imread(image_path.str(), cv::IMREAD_GRAYSCALE);
         cv::Mat image_float;
         image_uint.convertTo(image_float, CV_32FC1);
@@ -805,13 +805,14 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
 {
     uint32_t rows = scaled_image_float.rows;
     uint32_t cols = scaled_image_float.cols;
+    // std::cout << "Image.rows" << rows << "Image.cols" << cols << std::endl;
     int Imagescale = std::max(scaled_image_float.rows / src_depthmap.rows, scaled_image_float.cols / src_depthmap.cols);
-
+    std::cout << "here 0" << std::endl;
     if (Imagescale == 1) {
         std::cout << "Image.rows = Depthmap.rows" << std::endl;
         return;
     }
-
+    std::cout << "here 1" << std::endl;
     std::vector<cv::Mat_<float> > imgs(JBU_NUM);
     imgs[0] = scaled_image_float.clone();
     imgs[1] = src_depthmap.clone();
@@ -826,7 +827,7 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
 
     jbu.InitializeParameters(rows * cols);
     jbu.CudaRun();
-
+    std::cout << "here 2" << std::endl;
     cv::Mat_<float> depthmap = cv::Mat::zeros( rows, cols, CV_32FC1 );
 
     for (uint32_t i = 0; i < cols; ++i) {
@@ -838,18 +839,19 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
             depthmap (j, i) = jbu.depth_h[center];
         }
     }
-
+    std::cout << "here 3" << std::endl;
     cv::Mat_<float> disp0 = depthmap.clone();
     std::stringstream result_path;
     result_path << dense_folder << "/ACMM_NESP" << "/2333_" << std::setw(8) << std::setfill('0') << problem.ref_image_id;
     std::string result_folder = result_path.str();
-    mkdir(result_folder.c_str(), 755);
+    mkdir(result_folder.c_str(), 0755);
     std::string depth_path = result_folder + "/depths.dmb";
     writeDepthDmb ( depth_path, disp0 );
-
+    std::cout << "here 4" << std::endl;
     for (int i=0; i < JBU_NUM; i++) {
         CUDA_SAFE_CALL( cudaDestroyTextureObject(jbu.jt_h.imgs[i]) );
         CUDA_SAFE_CALL( cudaFreeArray(jbu.cuArray[i]) );
     }
     cudaDeviceSynchronize();
+    std::cout << "here 5" << std::endl;
 }

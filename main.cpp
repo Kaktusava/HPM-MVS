@@ -3,7 +3,7 @@
 
 void GenerateSampleList(const std::string &dense_folder, std::vector<Problem> &problems)
 {
-    std::string cluster_list_path = dense_folder / path("tis_right") / path("rgb") / path("mvsnet_input") / path("pair.txt");
+   std::string cluster_list_path = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/mvsnet_input") + std::string("/pair.txt");
 
     problems.clear();
 
@@ -37,13 +37,13 @@ int ComputeMultiScaleSettings(const std::string &dense_folder, std::vector<Probl
     int max_num_downscale = -1;
     int size_bound = 1000;
     PatchMatchParams pmp;
-    std::string image_folder = dense_folder + std::string("/images");
+    std::string image_folder = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/undistorted") + std::string("/ambient@best");
 
     size_t num_images = problems.size();
 
     for (size_t i = 0; i < num_images; ++i) {
         std::stringstream image_path;
-        image_path << image_folder << "/" << std::setw(8) << std::setfill('0') << problems[i].ref_image_id << ".jpg";
+        image_path << image_folder << "/" << std::setw(4) << std::setfill('0') << problems[i].ref_image_id << ".png";
         cv::Mat_<uint8_t> image_uint = cv::imread(image_path.str(), cv::IMREAD_GRAYSCALE);
 
         int rows = image_uint.rows;
@@ -78,7 +78,7 @@ void ProcessProblem(const std::string &dense_folder, const std::vector<Problem> 
     std::stringstream result_path;
     result_path << dense_folder << "/ACMM_NESP" << "/2333_" << std::setw(8) << std::setfill('0') << problem.ref_image_id;
     std::string result_folder = result_path.str();
-    mkdir(result_folder.c_str(), 755);
+    mkdir(result_folder.c_str(), 0755);
 
     ACMM acmm;
     if (geom_consistency) {
@@ -132,9 +132,9 @@ void JointBilateralUpsampling(const std::string &dense_folder, const Problem &pr
     cv::Mat_<float> ref_depth;
     readDepthDmb(depth_path, ref_depth);
 
-    std::string image_folder = dense_folder + std::string("/images");
+    std::string image_folder = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/undistorted") + std::string("/ambient@best");
     std::stringstream image_path;
-    image_path << image_folder << "/" << std::setw(8) << std::setfill('0') << problem.ref_image_id << ".jpg";
+    image_path << image_folder << "/" << std::setw(4) << std::setfill('0') << problem.ref_image_id << ".png";
     cv::Mat_<uint8_t> image_uint = cv::imread(image_path.str(), cv::IMREAD_GRAYSCALE);
     cv::Mat image_float;
     image_uint.convertTo(image_float, CV_32FC1);
@@ -147,15 +147,15 @@ void JointBilateralUpsampling(const std::string &dense_folder, const Problem &pr
     cv::Mat scaled_image_float;
     cv::resize(image_float, scaled_image_float, cv::Size(new_cols,new_rows), 0, 0, cv::INTER_LINEAR);
 
-    std::cout << "Run JBU for image " << problem.ref_image_id <<  ".jpg" << std::endl;
+    std::cout << "Run JBU for image " << problem.ref_image_id <<  ".png" << std::endl;
     RunJBU(scaled_image_float, ref_depth, dense_folder, problem );
 }
 
 void RunFusion(std::string &dense_folder, const std::vector<Problem> &problems, bool geom_consistency)
 {
     size_t num_images = problems.size();
-    std::string image_folder = dense_folder + std::string("/images");
-    std::string cam_folder = dense_folder + std::string("/cams");
+    std::string image_folder = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/undistorted") + std::string("/ambient@best");
+    std::string cam_folder = dense_folder + std::string("/tis_right") + std::string("/rgb") + std::string("/mvsnet_input");
 
     std::vector<cv::Mat> images;
     std::vector<Camera> cameras;
@@ -171,7 +171,7 @@ void RunFusion(std::string &dense_folder, const std::vector<Problem> &problems, 
     for (size_t i = 0; i < num_images; ++i) {
         std::cout << "Reading image " << std::setw(8) << std::setfill('0') << i << "..." << std::endl;
         std::stringstream image_path;
-        image_path << image_folder << "/" << std::setw(8) << std::setfill('0') << problems[i].ref_image_id << ".jpg";
+        image_path << image_folder << "/" << std::setw(4) << std::setfill('0') << problems[i].ref_image_id << ".png";
         cv::Mat_<cv::Vec3b> image = cv::imread (image_path.str(), cv::IMREAD_COLOR);
         std::stringstream cam_path;
         cam_path << cam_folder << "/" << std::setw(8) << std::setfill('0') << problems[i].ref_image_id << "_cam.txt";
@@ -308,7 +308,7 @@ int main(int argc, char** argv)
     GenerateSampleList(dense_folder, problems);
 
     std::string output_folder = dense_folder + std::string("/ACMM_NESP");
-    mkdir(output_folder.c_str(), 755);
+    mkdir(output_folder.c_str(), 0755);
 
     size_t num_images = problems.size();
     std::cout << "There are " << num_images << " problems needed to be processed!" << std::endl;
