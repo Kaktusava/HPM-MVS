@@ -807,12 +807,10 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
     uint32_t cols = scaled_image_float.cols;
     // std::cout << "Image.rows" << rows << "Image.cols" << cols << std::endl;
     int Imagescale = std::max(scaled_image_float.rows / src_depthmap.rows, scaled_image_float.cols / src_depthmap.cols);
-    std::cout << "here 0" << std::endl;
     if (Imagescale == 1) {
         std::cout << "Image.rows = Depthmap.rows" << std::endl;
         return;
     }
-    std::cout << "here 1" << std::endl;
     std::vector<cv::Mat_<float> > imgs(JBU_NUM);
     imgs[0] = scaled_image_float.clone();
     imgs[1] = src_depthmap.clone();
@@ -827,7 +825,6 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
 
     jbu.InitializeParameters(rows * cols);
     jbu.CudaRun();
-    std::cout << "here 2" << std::endl;
     cv::Mat_<float> depthmap = cv::Mat::zeros( rows, cols, CV_32FC1 );
 
     for (uint32_t i = 0; i < cols; ++i) {
@@ -839,7 +836,6 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
             depthmap (j, i) = jbu.depth_h[center];
         }
     }
-    std::cout << "here 3" << std::endl;
     cv::Mat_<float> disp0 = depthmap.clone();
     std::stringstream result_path;
     result_path << dense_folder << "/ACMM_NESP" << "/2333_" << std::setw(8) << std::setfill('0') << problem.ref_image_id;
@@ -847,11 +843,9 @@ void RunJBU(const cv::Mat_<float>  &scaled_image_float, const cv::Mat_<float> &s
     mkdir(result_folder.c_str(), 0755);
     std::string depth_path = result_folder + "/depths.dmb";
     writeDepthDmb ( depth_path, disp0 );
-    std::cout << "here 4" << std::endl;
     for (int i=0; i < JBU_NUM; i++) {
         CUDA_SAFE_CALL( cudaDestroyTextureObject(jbu.jt_h.imgs[i]) );
         CUDA_SAFE_CALL( cudaFreeArray(jbu.cuArray[i]) );
     }
     cudaDeviceSynchronize();
-    std::cout << "here 5" << std::endl;
 }
